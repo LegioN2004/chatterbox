@@ -1,0 +1,170 @@
+'use client';
+
+// @ts-ignore
+import "@stream-io/video-react-sdk/dist/css/styles.css";
+import { createToken } from '@/actions/createToken';
+import { useUser } from '@clerk/nextjs';
+import {
+    Call,
+    CallingState,
+    StreamCall,
+    StreamTheme,
+    StreamVideo,
+    StreamVideoClient,
+} from '@stream-io/video-react-sdk';
+import { useParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import InlineSpinner from '@/components/InlineSpinner';
+import { StatusCard } from '@/components/StatusCard';
+import { AlertTriangle, Video } from 'lucide-react';
+
+
+if (!process.env.NEXT_PUBLIC_STREAM_API_KEY) {
+    throw new Error("Missing NEXT_PUBLIC_STREAM_VIDEO_API_KEY env var");
+}
+
+function Layout({ children }: { children: React.ReactNode }) {
+
+    const { user } = useUser();
+    const { id } = useParams();
+    const [call, setCall] = useState<Call | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [client, setClient] = useState<StreamVideoClient | null>(null);
+
+    // since we don't want to re-render the client on every render, we use useMemo
+    const streamUser = useMemo(() => {
+        if (!user?.id) return null;
+        return {
+            id: user.id,
+            name: user.fullName || user.emailAddresses[0]?.emailAddress || 'Unknown user',
+            image: user.imageUrl || "https://getstream.io/random_svg/?id=" + user.id + "&name=" + encodeURIComponent(user.fullName || user.emailAddresses[0]?.emailAddress || 'Unknown user'),
+            type: "authenticated" as const,
+        };
+    }, [user]);
+
+    // create token provider function outside of the useMemo to avoid calling during re-renders
+    const tokenProvider = useCallback(async () => {
+        if (!user?.id) {
+            throw new Error("User not logged in");
+        }
+        return await createToken(user.id);
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!streamUser) {
+            setClient(null);
+            return;
+        }
+
+        const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
+        if (!apiKey) {
+            throw new Error("Missing NEXT_PUBLIC_STREAM_API_KEY in environment");
+        }
+
+        const newClient = new StreamVideoClient({
+            apiKey,
+            user: streamUser,
+            tokenProvider,
+        });
+        setClient(newClient);
+
+        return () => {
+            newClient.disconnectUser().catch(console.error);
+        };
+    }, [streamUser, tokenProvider]);
+
+    useEffect(() => {
+        if (!client || !id) return;
+
+        setError(null);
+        // client id/ id of the call is the id of the room we are in
+        const streamCall = client.call("default", id as string);
+
+        const joinCall = async () => {
+            try {
+                await streamCall.join({ create: true });
+                setCall(streamCall);
+            } catch (err) {
+                console.error('Error starting call:', err);
+                setError(
+                    err instanceof Error ? err.message : "Failed to join the call."
+                );
+            }
+        };
+
+        joinCall();
+
+
+        // celanup funcson
+        return () => {
+            if (streamCall && streamCall.state.callingState === CallingState.JOINED) {
+                streamCall.leave().catch(console.error);
+            }
+        };
+    }, [client, id]);
+
+
+
+    if (!client) {
+        return (
+            <StatusCard
+                title="Initializing client..."
+                description="Setting up video call connection..."
+                className="min-h-screen bg-blue-50"
+            >
+                <InlineSpinner size="lg" />
+            </StatusCard>
+        );
+    }
+
+    if (error) {
+        return (
+            <StatusCard
+                title="Call Error"
+                description={error}
+                className="min-h-screen bg-red-50"
+                action={
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full bg-red-600 duration-200 focus:outline-none focus:ring-2 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:ring-red-500 focus:ring-offset-2"
+                    >
+                        Retry
+                    </button>
+                }
+            >
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                    <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+            </StatusCard>
+        );
+    }
+
+
+    if (!call) {
+        return (
+            <StatusCard
+                title="Joining call..."
+                className="min-h-screen bg-green-50"
+            >
+                <div className="animate-bounce h-16 w-16 mx-auto">
+                    <div className="w-16 h-16 bg-green-200 rounded-full flex items-center justify-center">
+                        <Video className="w-8 h-8 text-green-600" />
+                    </div>
+                </div>
+                <div className="text-green-600 font-mono text-sm bg-green-100 px-3 py-1 rounded-full inline-block mt-4">
+                    Call ID: {id}
+                </div>
+            </StatusCard>
+        );
+    }
+
+    return (
+        <StreamVideo client={client}>
+            <StreamTheme className='text-white'>
+                <StreamCall call={call}> {children} </StreamCall>
+            </StreamTheme>
+        </StreamVideo>
+    )
+}
+
+export default Layout
