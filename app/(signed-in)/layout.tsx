@@ -13,6 +13,8 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar"
 import Link from 'next/link'
+// @ts-ignore
+import "stream-chat-react/dist/css/v2/index.css";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
