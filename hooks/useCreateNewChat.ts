@@ -51,7 +51,7 @@ const useCreateNewChat = () => {
 				name?: string;
 			} = {
 				members,
-				created_by_id: createdBy,
+				createdBy: createdBy,
 			};
 
 			if (isGroupChat) {
