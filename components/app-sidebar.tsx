@@ -1,20 +1,19 @@
 import * as React from "react"
-import { GalleryVerticalEnd } from "lucide-react"
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Button } from "./ui/button"
 import { UserButton, useUser } from "@clerk/nextjs"
-import { ChannelList } from "stream-chat-react"
 import { ChannelFilters, ChannelSort } from "stream-chat"
+import { ChannelList } from "stream-chat-react"
 import NewChatDialog from "./NewChatDialog"
+import { Button } from "./ui/button"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
