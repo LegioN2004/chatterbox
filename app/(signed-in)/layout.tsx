@@ -2,8 +2,8 @@
 
 import { Chat } from 'stream-chat-react'
 
-import UserSyncWrapper from '../../components/UserSyncWrapper'
 import { streamClient } from '@/lib/stream'
+import UserSyncWrapper from '../../components/UserSyncWrapper'
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -13,8 +13,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar"
 import Link from 'next/link'
-// @ts-ignore
-import "stream-chat-react/dist/css/v2/index.css";
+import "stream-chat-react/dist/css/v2/index.css"
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
