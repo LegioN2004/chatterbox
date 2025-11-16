@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import { useUser } from "@clerk/nextjs"
+import { useUser } from "@clerk/nextjs";
 import { LogOutIcon, VideoIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Channel, ChannelHeader, MessageInput, MessageList, Thread, useChatContext, Window } from "stream-chat-react";
@@ -10,7 +10,7 @@ import { Channel, ChannelHeader, MessageInput, MessageList, Thread, useChatConte
 
 const Dashboard = () => {
     // user object from clerk ofc
-    const { user, isLoaded } = useUser();
+    const { user } = useUser();
     const router = useRouter();
     // for using the
     const { channel, setActiveChannel } = useChatContext();
