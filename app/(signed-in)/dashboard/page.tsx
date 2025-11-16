@@ -1,22 +1,98 @@
 'use client' // highly interactive app karne
 
+import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useUser } from "@clerk/nextjs"
-import { useRouter } from "next/router";
-import { useChatContext } from "stream-chat-react";
+import { LogOutIcon, VideoIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Channel, ChannelHeader, MessageInput, MessageList, Thread, useChatContext, Window } from "stream-chat-react";
 
 
 const Dashboard = () => {
     // user object from clerk ofc
     const { user, isLoaded } = useUser();
     const router = useRouter();
-    // for using the 
+    // for using the
     const { channel, setActiveChannel } = useChatContext();
     const { setOpen } = useSidebar();
 
-  return (
-    <div>Dashboard main</div>
-  )
+    const handleCall = () => {
+        if (!channel) return;
+        router.push(`/dashboard/video-call/${channel.id}`); // first go to dashboard to close any open sidebars etc
+        setOpen(false);
+    };
+
+    const handleLeaveChat = async () => {
+        if (!channel || !user?.id) {
+            console.log("No active channel or user");
+            return;
+        }
+
+        const confirm = window.confirm("Are you sure you want to leave this chat?");
+        if (!confirm) return;
+
+        try {
+            // remove the user from the channel members
+            await channel.removeMembers([user.id]);
+
+            // clear the active channel
+            setActiveChannel(undefined);
+
+            // redirect to dashboard/homepage
+            router.push('/dashboard');
+        } catch (error) {
+            console.error("Error leaving the chat:", error);
+        }
+    };
+
+
+    return (
+        <div className="flex flex-col w-full flex-1">
+            {channel ? (
+                <Channel>
+                    <Window>
+                        <div className="flex items-center justify-between">
+                            {channel.data?.member_count === 1 ? (
+                                <ChannelHeader title="Everyone else has left this chat!!"></ChannelHeader>
+                            ) : (
+                                <ChannelHeader />
+                            )}
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" onClick={handleCall}>
+                                    <VideoIcon className="w-4 h-4 mr-2" />
+                                    Video Call
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleLeaveChat}
+                                    className="text-red-500 hover:text-red-600 hover:red-bg-50 dark:hover:bg-red-950"
+                                >
+                                    <LogOutIcon className="w-4 h-4 mr-2" />
+                                    Leave chat
+                                </Button>
+                            </div>
+                        </div>
+
+                            <MessageList />
+
+                            <div className="sticky bottom-0 w-full">
+                                <MessageInput />
+                            </div>
+                    </Window>
+                    <Thread />
+                </Channel>
+            ) : (
+                <div className="flex flex-col items-center justify-center h-full">
+                    <h2 className="text-2xl font-semibold text-muted-foreground mb-4">
+                        No chat selected
+                    </h2>
+                    <p className="text-muted-foreground">
+                        Select a chat from the sidebar or start a new conversation
+                    </p>
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default Dashboard
