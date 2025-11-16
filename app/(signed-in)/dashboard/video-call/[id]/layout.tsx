@@ -1,8 +1,9 @@
 'use client';
 
-// @ts-ignore
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import { createToken } from '@/actions/createToken';
+import InlineSpinner from '@/components/InlineSpinner';
+import { StatusCard } from '@/components/StatusCard';
 import { useUser } from '@clerk/nextjs';
 import {
     Call,
@@ -12,11 +13,9 @@ import {
     StreamVideo,
     StreamVideoClient,
 } from '@stream-io/video-react-sdk';
+import { AlertTriangle, Video } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import InlineSpinner from '@/components/InlineSpinner';
-import { StatusCard } from '@/components/StatusCard';
-import { AlertTriangle, Video } from 'lucide-react';
 
 
 if (!process.env.NEXT_PUBLIC_STREAM_API_KEY) {
